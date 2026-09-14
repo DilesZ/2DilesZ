@@ -1,0 +1,83 @@
+:root {
+  --bg: #0b1020;
+  --fg: #e8ecff;
+  --accent: #ffd23f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Courier New", ui-monospace, monospace;
+  overscroll-behavior: none;
+}
+#app {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+#game-shell {
+  position: relative;
+  width: min(100vw - 16px, calc((100dvh - 16px) * 1.7777));
+  max-width: 1100px;
+}
+#game-container {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 3px solid #2b3a67;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0b1020;
+  box-shadow: 0 0 40px rgba(80, 120, 255, 0.25);
+  touch-action: none;
+}
+#game-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  image-rendering: pixelated;
+  display: block;
+}
+#rotate-hint {
+  text-align: center;
+  font-size: 14px;
+  opacity: 0.9;
+}
+#touch-controls[hidden] {
+  display: none;
+}
+#touch-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px;
+  pointer-events: none;
+}
+#touch-controls .tc-left, #touch-controls .tc-right {
+  display: flex;
+  gap: 10px;
+}
+#touch-controls button {
+  pointer-events: auto;
+  width: 64px;
+  height: 64px;
+  font-size: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: rgba(20, 28, 60, 0.55);
+  color: #fff;
+  backdrop-filter: blur(2px);
+}
+#touch-controls button:active { background: rgba(255, 210, 63, 0.55); }
+.noscript { text-align: center; }
+@media (max-width: 640px) {
+  #app { padding: 4px; }
+  #game-shell { width: 100vw - 8px; }
+}

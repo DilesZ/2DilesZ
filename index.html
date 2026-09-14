@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="description" content="2DilesZ: El Faro Perdido — plataformas pixel-retro jugable en el navegador. 6 niveles, power-ups, récords locales." />
+    <meta name="theme-color" content="#0b1020" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./style.css" />
+    <title>2DilesZ: El Faro Perdido</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="game-shell">
+        <div id="game-container" role="application" aria-label="Juego de plataformas 2DilesZ: El Faro Perdido"></div>
+        <div id="rotate-hint" hidden>
+          <p>🔄 Gira el dispositivo para jugar mejor (horizontal recomendado)</p>
+        </div>
+        <div id="touch-controls" hidden>
+          <div class="tc-left">
+            <button id="btn-left" aria-label="Mover izquierda">◀</button>
+            <button id="btn-right" aria-label="Mover derecha">▶</button>
+          </div>
+          <div class="tc-right">
+            <button id="btn-dash" aria-label="Dash">💨</button>
+            <button id="btn-jump" aria-label="Saltar">⤒</button>
+          </div>
+        </div>
+      </div>
+      <noscript><p class="noscript">Este juego necesita JavaScript.</p></noscript>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
