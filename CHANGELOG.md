@@ -2,6 +2,15 @@
 
 Todos los cambios notables de **2DilesZ: El Faro Perdido**.
 
+## [1.0.1] - 2026-09-14
+
+### Corregido
+- Controles táctiles: ahora flotan sobre el marco del juego en vez de solaparse con el
+  aviso de rotación en móvil vertical (verificado con `smoke-mobile` en producción).
+- Detección táctil más estricta (exige `maxTouchPoints > 0` o puntero grueso) y regla
+  CSS `[hidden]` para que nunca se muestren en desktop.
+- Seguridad: Vite 6.3.1 → 6.4.3 (corrige HIGH de `server.fs`).
+
 ## [1.0.0] - 2026-09-14
 
 ### Añadido

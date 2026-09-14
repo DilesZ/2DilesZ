@@ -57,3 +57,19 @@
 - BLOQUEO: el deploy CLI requiere `vercel login` (OAuth manual del propietario) o que el
   proyecto Vercel conectado haga auto-deploy del push. Pendiente URL del proyecto Vercel
   para verificar producción.
+
+## 2026-09-14 — Login Vercel + deploy + producción (FASES 15-16)
+- `vercel login` por device-code (`RQJN-QXVQ`, luego `PCBF-QMTX` por email
+  davidramosoler@gmail.com). Usuario autenticado: `dilesz`. CLI 59.16.0.
+- Primer `vercel --prod` falló por nombre con mayúsculas (`2DilesZ-game`); relanzado con
+  `--name 2dilesz-game` → proyecto creado, deployment READY:
+  https://2dilesz-game.vercel.app (+ URL con hash).
+- Smoke en PRODUCCIÓN (desktop): menú → N1, avance 80→381px, 1 moneda, 0 errores. OK.
+- Smoke en PRODUCCIÓN (móvil 390x844 táctil): controles visibles, tap en JUGAR arranca,
+  salto con ⤒ (466→373px), 0 errores. OK.
+- Bug móvil detectado en captura: botones táctiles tapaban el aviso de rotación
+  (posicionados respecto al shell). Fix: `#touch-controls` dentro de `#game-container`
+  + `position: relative`. Rebuild, commit `1eb61e3`, push, redeploy, re-smoke desktop+móvil OK.
+- Mejora de test: `dispatchEvent` (no `dispatch_event`) en Playwright JS; el tap corto da
+  saltito (salto variable, correcto) → el test móvil mantiene pulsado para salto completo.
+- Pendiente recomendado: conectar repo Git en dashboard para auto-deploy por push.
