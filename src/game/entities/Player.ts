@@ -5,7 +5,10 @@ import { speedMultiplier } from '../logic/powerups';
 import { AudioBus } from '../systems/audio';
 import type { Actions } from '../systems/input';
 
-/** Control del jugador: coyote-time, jump-buffer, salto variable, doble salto y dash. */
+/**
+ * Control del jugador: coyote-time, jump-buffer, salto variable, doble salto y dash.
+ * Visual: sprite Kenney con poses (idle / walk A-B / jump / hit).
+ */
 export class Player {
   sprite: Phaser.Physics.Arcade.Sprite;
   private coyoteUntil = 0;
@@ -15,27 +18,35 @@ export class Player {
   private dashUntil = 0;
   private dashCooldownUntil = 0;
   private dashDir = 1;
+  private hurtUntil = 0;
+  private walkMs = 0;
   facing = 1;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    this.sprite = scene.physics.add.sprite(x, y, TextureKeys.Player);
+    this.sprite = scene.physics.add.sprite(x, y, TextureKeys.PlayerIdle);
     this.sprite.setCollideWorldBounds(false);
     this.sprite.setDragX(TUNING.player.dragX);
     this.sprite.setMaxVelocity(TUNING.player.moveSpeed * 1.6, TUNING.player.maxFall);
     this.sprite.setDepth(10);
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    body.setSize(12, 18);
-    body.setOffset(2, 2);
+    body.setSize(this.sprite.width * 0.48, this.sprite.height * 0.8);
   }
 
   reset(x: number, y: number): void {
     this.sprite.setPosition(x, y);
     this.sprite.setVelocity(0, 0);
     this.sprite.setAlpha(1);
+    this.sprite.setTexture(TextureKeys.PlayerIdle);
     this.airJumps = 0;
     this.dashUntil = 0;
     this.dashCooldownUntil = 0;
     this.cutArmed = false;
+    this.hurtUntil = 0;
+  }
+
+  hurt(now: number): void {
+    this.hurtUntil = now + 320;
+    this.sprite.setTexture(TextureKeys.PlayerHit);
   }
 
   get x(): number {
@@ -75,6 +86,7 @@ export class Player {
     }
     if (this.isDashing(now)) {
       this.sprite.setFlipX(this.dashDir < 0);
+      this.sprite.setTexture(TextureKeys.PlayerJump);
       return;
     }
     if (!body.allowGravity) body.setAllowGravity(true);
@@ -88,10 +100,6 @@ export class Player {
     const nvx = vx < target ? Math.min(target, vx + approach) : Math.max(target, vx - approach);
     this.sprite.setVelocityX(nvx);
     this.sprite.setFlipX(this.facing < 0);
-
-    // squash & stretch sutil
-    const stretch = Phaser.Math.Clamp(1 + Math.abs(nvx) / 2400, 1, 1.12);
-    this.sprite.setScale(this.facing < 0 ? -stretch : stretch, 2 - stretch > 0 ? 1 / Math.sqrt(stretch) : 1);
 
     // --- salto ---
     const buffered = now < this.bufferUntil;
@@ -116,5 +124,19 @@ export class Player {
       this.cutArmed = false;
     }
     if (grounded) this.cutArmed = false;
+
+    // --- pose visual ---
+    if (now < this.hurtUntil) {
+      this.sprite.setTexture(TextureKeys.PlayerHit);
+    } else if (!grounded) {
+      this.sprite.setTexture(TextureKeys.PlayerJump);
+    } else if (Math.abs(nvx) > 30) {
+      this.walkMs += dtMs;
+      this.sprite.setTexture(
+        Math.floor(this.walkMs / 130) % 2 === 0 ? TextureKeys.PlayerWalkA : TextureKeys.PlayerWalkB,
+      );
+    } else {
+      this.sprite.setTexture(TextureKeys.PlayerIdle);
+    }
   }
 }

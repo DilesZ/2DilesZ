@@ -2,6 +2,21 @@
 
 Todos los cambios notables de **2DilesZ: El Faro Perdido**.
 
+## [1.1.0] - 2026-09-14
+
+### Añadido
+- Assets profesionales **Kenney (CC0)**: jugador animado (idle/walk/jump/hit), slime,
+  mosca y sierras animados, moneda giratoria, pinchos, flags de checkpoint, antorchas,
+  tiles de hierba y puentes de madera. Ver `docs/licenses.md` (26 ficheros, 40KB).
+- Escena `Preloader` con barra de progreso + recorte automático de transparencias.
+- Fila decorativa con sprites en el menú + crédito a Kenney.
+- Test `assets.test.ts`: manifiesto de assets verificado (existencia, peso, trim).
+
+### Cambiado
+- Plataformas con textura de hierba repetida; móviles con madera; checkpoints con
+  bandera apagada/verde ondeante; corazón y estrella usan PNG Kenney.
+- Pista del nivel 2 actualizada (babosas en vez de cangrejos).
+
 ## [1.0.1] - 2026-09-14
 
 ### Corregido

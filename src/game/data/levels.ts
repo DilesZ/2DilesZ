@@ -87,7 +87,7 @@ export const LEVELS: LevelDef[] = [
   {
     id: 2,
     name: 'Pasto inquieto',
-    hint: '¡Cuidado con los cangrejos! Salta encima para derrotarlos.',
+    hint: '¡Cuidado con las babosas! Salta encima para derrotarlas.',
     worldW: 2800,
     spawn: { x: 80, y: 380 },
     goal: { x: 2660, y: 340 },

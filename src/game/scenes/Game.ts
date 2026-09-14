@@ -26,7 +26,7 @@ import { burst, flashSprite, floatText } from '../systems/fx';
 import { readActions } from '../systems/input';
 
 interface MovingPlat {
-  obj: Phaser.GameObjects.Rectangle;
+  obj: Phaser.GameObjects.TileSprite;
   body: Phaser.Physics.Arcade.Body;
   baseX: number;
   baseY: number;
@@ -67,6 +67,13 @@ export class Game extends Phaser.Scene {
   private hud!: Phaser.GameObjects.Text;
   private hintText!: Phaser.GameObjects.Text;
   private finished = false;
+  private takenFlags: Phaser.GameObjects.Image[] = [];
+  private torches: Phaser.GameObjects.Image[] = [];
+  private animMs = 0;
+  private coinParity = -1;
+  private flagParity = -1;
+  private torchParity = -1;
+  private sawParity = -1;
 
   constructor() {
     super(SceneKeys.Game);
@@ -85,6 +92,13 @@ export class Game extends Phaser.Scene {
     this.finished = false;
     this.iframesUntil = 0;
     this.sawCooldownUntil = 0;
+    this.takenFlags = [];
+    this.torches = [];
+    this.animMs = 0;
+    this.coinParity = -1;
+    this.flagParity = -1;
+    this.torchParity = -1;
+    this.sawParity = -1;
     this.respawn = { ...this.level.spawn };
   }
 
@@ -165,30 +179,28 @@ export class Game extends Phaser.Scene {
     }
   }
 
-  private addStaticPlatform(x: number, y: number, w: number, h: number, dark = false): void {
-    const color = dark ? 0x241d3d : 0x3a2d5c;
-    const r = this.add.rectangle(x + w / 2, y + h / 2, w, h, color);
-    r.setStrokeStyle(2, 0x6f5da8, 1);
+  private addStaticPlatform(x: number, y: number, w: number, h: number): void {
+    // Cuerpo invisible + visual de hierba Kenney repetida.
+    const r = this.add.rectangle(x + w / 2, y + h / 2, w, h, 0xffffff, 0);
+    r.setVisible(false);
     this.physics.add.existing(r, true);
     this.staticGroup!.add(r);
-    // hierba superior
-    const grass = this.add.rectangle(x + w / 2, y + 3, w, 6, 0x35b86b);
-    grass.setScrollFactor(1);
+    this.add.tileSprite(x + w / 2, y + h / 2, w, h, TextureKeys.Grass).setDepth(1);
   }
 
   private buildPlatforms(): void {
     this.staticGroup = this.physics.add.staticGroup();
     this.level.platforms.forEach((p, i) => {
       if (p.moving) {
-        const r = this.add.rectangle(p.x + p.w / 2, p.y + p.h / 2, p.w, p.h, 0x6f5da8);
-        r.setStrokeStyle(2, 0xffffff, 0.8);
-        this.physics.add.existing(r);
-        const body = r.body as Phaser.Physics.Arcade.Body;
+        const ts = this.add.tileSprite(p.x + p.w / 2, p.y + p.h / 2, p.w, p.h, TextureKeys.Bridge);
+        ts.setDepth(2);
+        this.physics.add.existing(ts);
+        const body = ts.body as Phaser.Physics.Arcade.Body;
         body.setAllowGravity(false);
         body.setImmovable(true);
         body.setFriction(1, 1);
         this.movers.push({
-          obj: r,
+          obj: ts,
           body,
           baseX: p.x + p.w / 2,
           baseY: p.y + p.h / 2,
@@ -198,7 +210,7 @@ export class Game extends Phaser.Scene {
           t: i * 700,
         });
       } else {
-        this.addStaticPlatform(p.x, p.y, p.w, p.h, i % 3 === 2);
+        this.addStaticPlatform(p.x, p.y, p.w, p.h);
       }
     });
   }
@@ -206,7 +218,7 @@ export class Game extends Phaser.Scene {
   private buildGoalAndCheckpoints(): void {
     this.checkpointGroup = this.physics.add.staticGroup();
     for (const c of this.level.checkpoints) {
-      const img = this.add.image(c.x, c.y, TextureKeys.Checkpoint);
+      const img = this.add.image(c.x, c.y + 12, TextureKeys.FlagOff).setOrigin(0.5, 1);
       this.physics.add.existing(img, true);
       img.setData('taken', false);
       img.setData('cx', c.x);
@@ -216,6 +228,12 @@ export class Game extends Phaser.Scene {
     const gl = this.add.image(this.level.goal.x, this.level.goal.y, TextureKeys.Goal);
     gl.setDepth(8);
     this.tweens.add({ targets: gl, y: this.level.goal.y - 6, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // antorchas animadas flanqueando el faro
+    for (const dx of [-46, 46]) {
+      const t = this.add.image(this.level.goal.x + dx, this.level.goal.y + 22, TextureKeys.TorchA);
+      t.setDepth(7);
+      this.torches.push(t);
+    }
     this.goalZone = this.add.zone(this.level.goal.x, this.level.goal.y, 56, 70);
     this.physics.add.existing(this.goalZone);
     const zb = this.goalZone.body as Phaser.Physics.Arcade.Body;
@@ -234,10 +252,11 @@ export class Game extends Phaser.Scene {
     }
     this.powGroup = this.physics.add.staticGroup();
     for (const p of this.level.powerups) {
-      const img = this.add.image(p.x, p.y, `px-pow-${p.kind}`);
+      const tex =
+        p.kind === 'heart' ? TextureKeys.HeartK : p.kind === 'star' ? TextureKeys.StarK : `px-pow-${p.kind}`;
+      const img = this.add.image(p.x, p.y, tex);
       this.physics.add.existing(img, true);
       img.setData('kind', p.kind);
-      img.setScale(1.4);
       this.tweens.add({ targets: img, y: p.y - 7, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       this.powGroup.add(img);
     }
@@ -252,23 +271,30 @@ export class Game extends Phaser.Scene {
   }
 
   private buildHazards(): void {
-    // pinchos (estáticos, daño al tocar)
+    // pinchos Kenney (base apoyada en la plataforma: def.y + 16)
+    const spikeFrame = this.textures.getFrame(TextureKeys.Spikes);
+    const spikeScale = 18 / spikeFrame.height;
+    const spikeW = spikeFrame.width * spikeScale;
     for (const s of this.level.spikes) {
-      const count = Math.max(1, Math.round(s.w / 16));
+      const count = Math.max(1, Math.round(s.w / spikeW));
       for (let i = 0; i < count; i++) {
-        const img = this.add.image(s.x + 8 + i * 16, s.y - 8, TextureKeys.Spike);
+        const img = this.add
+          .image(s.x + spikeW / 2 + i * spikeW, s.y + 16, TextureKeys.Spikes)
+          .setOrigin(0.5, 1)
+          .setScale(spikeScale);
         this.physics.add.existing(img, true);
         img.setData('spike', true);
         this.staticGroup!.add(img);
       }
     }
-    // sierras móviles
+    // sierras Kenney animadas (intercambio de frames, sin rotación)
     for (const sd of this.level.saws) {
-      const img = this.physics.add.image(sd.x, sd.y, TextureKeys.Saw);
+      const img = this.physics.add.image(sd.x, sd.y, TextureKeys.SawA);
       const body = img.body as Phaser.Physics.Arcade.Body;
       body.setAllowGravity(false);
       body.setImmovable(true);
-      body.setCircle(9, 1, 1);
+      const r = (Math.min(img.width, img.height) / 2) * 0.8;
+      body.setCircle(r, (img.width - r * 2) / 2, (img.height - r * 2) / 2);
       this.saws.push({ img, baseX: sd.x, baseY: sd.y, axis: sd.axis, range: sd.range, speed: sd.speed, t: Math.random() * 1000 });
     }
   }
@@ -291,7 +317,8 @@ export class Game extends Phaser.Scene {
       const img = cp as Phaser.GameObjects.Image;
       if (img.getData('taken')) return;
       img.setData('taken', true);
-      img.setTexture(TextureKeys.CheckpointOn);
+      img.setTexture(TextureKeys.FlagOnA);
+      this.takenFlags.push(img);
       this.respawn = { x: Number(img.getData('cx')), y: Number(img.getData('cy')) };
       AudioBus.checkpoint();
       burst(this, img.x, img.y - 10, 0x35ff70, 10, 120);
@@ -412,6 +439,7 @@ export class Game extends Phaser.Scene {
       // dash atraviesa walkers sin daño (game-feel)
       return;
     }
+    this.player.hurt(now);
     if (consumeShield(this.powers)) {
       this.iframesUntil = now + TUNING.player.iframesMs;
       AudioBus.hurt();
@@ -525,8 +553,6 @@ export class Game extends Phaser.Scene {
     // plataformas móviles (sine)
     for (const m of this.movers) {
       m.t += delta;
-      const off = Math.sin(m.t / 1000 / (m.speed / 100)) * 0; // placeholder (movido abajo)
-      void off;
       const phase = (m.t * m.speed) / 1000;
       if (m.axis === 'x') {
         const nx = m.baseX + Math.sin(phase / 60) * m.range;
@@ -537,15 +563,36 @@ export class Game extends Phaser.Scene {
       }
     }
 
-    // sierras
+    // sierras (patrulla + dientes animados)
+    const sawFrame = Math.floor(this.animMs / 130) % 2 === 0 ? TextureKeys.SawA : TextureKeys.SawB;
     for (const s of this.saws) {
       s.t += delta;
       const phase = (s.t * s.speed) / 1000;
       if (s.axis === 'x') s.img.setPosition(s.baseX + Math.sin(phase / 60) * s.range, s.baseY);
       else s.img.setPosition(s.baseX, s.baseY + Math.sin(phase / 60) * s.range);
-      s.img.setAngle(s.img.angle + delta * 0.25);
+      if (s.img.texture.key !== sawFrame) s.img.setTexture(sawFrame);
       const body = s.img.body as Phaser.Physics.Arcade.Body;
       body.updateFromGameObject();
+    }
+
+    // animaciones ambientales Kenney (moneda, banderas, antorchas)
+    this.animMs += delta;
+    const coinFrame = Math.floor(this.animMs / 150) % 2 === 0 ? TextureKeys.Coin : TextureKeys.CoinSide;
+    if (coinFrame && this.coinParity !== Math.floor(this.animMs / 150) % 2) {
+      this.coinParity = Math.floor(this.animMs / 150) % 2;
+      for (const c of (this.coinGroup?.getChildren() ?? []) as Phaser.GameObjects.Image[]) {
+        if (c.active) c.setTexture(coinFrame);
+      }
+    }
+    const flagFrame = Math.floor(this.animMs / 300) % 2 === 0 ? TextureKeys.FlagOnA : TextureKeys.FlagOnB;
+    if (this.flagParity !== Math.floor(this.animMs / 300) % 2) {
+      this.flagParity = Math.floor(this.animMs / 300) % 2;
+      for (const f of this.takenFlags) f.setTexture(flagFrame);
+    }
+    const torchFrame = Math.floor(this.animMs / 220) % 2 === 0 ? TextureKeys.TorchA : TextureKeys.TorchB;
+    if (this.torchParity !== Math.floor(this.animMs / 220) % 2) {
+      this.torchParity = Math.floor(this.animMs / 220) % 2;
+      for (const t of this.torches) t.setTexture(torchFrame);
     }
 
     // enemigos
@@ -620,8 +667,9 @@ export class Game extends Phaser.Scene {
     for (const sp of spikes) {
       if (!sp.active) continue;
       const r = sp.getBounds();
-      r.height = 10;
-      r.y += 6;
+      const shave = r.height * 0.35;
+      r.height -= shave;
+      r.y += shave;
       if (Phaser.Geom.Intersects.RectangleToRectangle(pb2, r)) {
         this.damage('spike');
         break;

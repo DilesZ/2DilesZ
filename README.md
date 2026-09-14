@@ -3,7 +3,8 @@
 Plataformas pixel-retro para navegador. Reactiva los 6 faros de la montaña.
 
 - **Stack:** Phaser 3.90 + TypeScript 5.7 + Vite 6. Sin React (el HUD vive en Phaser).
-- **Assets:** 100% procedurales generados en `Boot.ts`. Sin descargas, sin copyright.
+- **Assets:** personajes, enemigos, tiles, moneda y flags de **Kenney (CC0)** —
+  ver `docs/licenses.md` — más faro, iconos y partículas propios generados por código.
 - **Audio:** 100% procedural con WebAudio (`systems/audio.ts`). Sin ficheros.
 - **Persistencia:** `localStorage` (`2dilesz-save-v1`): niveles, récords, mute, dash.
 
@@ -59,4 +60,5 @@ docs/                # architecture, game-design, testing, deployment, developme
 
 ## Licencias
 
-Código propio (MIT). Pixel-art y audio generados por código en este repo: sin atribución externa.
+- Sprites Kenney (CC0, dominio público): ver `docs/licenses.md` + crédito en el menú.
+- Código propio (MIT). Faro, iconos, gólem y audio generados por código: sin atribución externa.

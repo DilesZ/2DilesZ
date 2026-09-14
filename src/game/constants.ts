@@ -3,6 +3,7 @@ export const GAME_H = 540;
 
 export const SceneKeys = {
   Boot: 'Boot',
+  Preloader: 'Preloader',
   Menu: 'Menu',
   HowTo: 'HowTo',
   Settings: 'Settings',
@@ -12,21 +13,36 @@ export const SceneKeys = {
   Victory: 'Victory',
 } as const;
 
+/** "t-*" = Kenney recortado (Preloader). "px-*" = procedural propio (Boot). */
 export const TextureKeys = {
-  Player: 'px-player',
-  Walker: 'px-walker',
-  Flyer: 'px-flyer',
+  PlayerIdle: 't-player-idle',
+  PlayerJump: 't-player-jump',
+  PlayerWalkA: 't-player-walk-a',
+  PlayerWalkB: 't-player-walk-b',
+  PlayerHit: 't-player-hit',
+  SlimeRest: 't-slime-rest',
+  SlimeWalkA: 't-slime-walk-a',
+  SlimeWalkB: 't-slime-walk-b',
+  FlyRest: 't-fly-rest',
+  FlyA: 't-fly-a',
+  FlyB: 't-fly-b',
+  SawA: 't-saw-a',
+  SawB: 't-saw-b',
+  Coin: 't-coin',
+  CoinSide: 't-coin-side',
+  Spikes: 't-spikes',
+  FlagOff: 't-flag-off',
+  FlagOnA: 't-flag-a',
+  FlagOnB: 't-flag-b',
+  TorchA: 't-torch-a',
+  TorchB: 't-torch-b',
+  Grass: 't-grass',
+  Bridge: 't-bridge',
+  HeartK: 't-heart',
+  StarK: 't-star',
   Golem: 'px-golem',
-  Tile: 'px-tile',
-  TileDark: 'px-tile-dark',
-  Coin: 'px-coin',
-  Spike: 'px-spike',
-  Saw: 'px-saw',
-  Checkpoint: 'px-checkpoint',
-  CheckpointOn: 'px-checkpoint-on',
   Goal: 'px-goal',
   Dot: 'px-dot',
-  Moving: 'px-moving',
 } as const;
 
 export type PowerUpKind =
@@ -47,6 +63,9 @@ export const POWERUP_META: Record<PowerUpKind, { name: string; desc: string; col
   heart: { name: 'Corazón', desc: '+1 vida', color: 0xff5d5d, css: '#ff5d5d' },
   dash: { name: 'Dash', desc: 'Desbloquea dash (este nivel)', color: 0xffffff, css: '#ffffff' },
 };
+
+/** Power-ups con icono procedural propio (el resto usa PNG Kenney). */
+export const PROCEDURAL_POWERS: PowerUpKind[] = ['boots', 'feather', 'shield', 'magnet', 'dash'];
 
 export const SAVE_KEY = '2dilesz-save-v1';
 

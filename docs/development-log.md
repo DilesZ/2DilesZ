@@ -58,6 +58,23 @@
   proyecto Vercel conectado haga auto-deploy del push. Pendiente URL del proyecto Vercel
   para verificar producción.
 
+## 2026-09-14 — Mejora gráfica con assets gratuitos (v1.1.0)
+- Decisión: pack **"New Platformer Pack" de Kenney (CC0)** — único set completo y
+  cohesionado accesible (kenney.nl/opengameart/itch bloquean TLS desde esta red;
+  se usó el mirror shorepine/kenney vía raw.githubusercontent, ficheros originales).
+- Descargados 26 PNG (40KB) a `public/assets/kenney/`. Licencias en `docs/licenses.md`
+  + crédito en menú y README.
+- Nueva escena `Preloader` (barra de progreso) + `systems/trim.ts` (recorte de
+  transparencias con bbox unión para animaciones sin jitter).
+- Jugador/enemigos/sierras animados por intercambio de frames; moneda giratoria;
+  flags y antorchas ambientales; plataformas con tileSprites; pose de daño.
+- Tests 19/19 (nuevo `assets.test.ts`). Typecheck/lint/build OK.
+- Playtesting: N1 + N2 (slime, pinchos, +50, Dash ✓) con 0 errores; menú reajustado
+  dos veces por solape de la fila decorativa (verificado en captura).
+- Bug de test: Nivel 2 bloqueado en perfil fresco (correcto) → seed de localStorage.
+- Pista N2: cangrejos → babosas.
+- Pendiente: commit + push + deploy + smokes en producción.
+
 ## 2026-09-14 — Login Vercel + deploy + producción (FASES 15-16)
 - `vercel login` por device-code (`RQJN-QXVQ`, luego `PCBF-QMTX` por email
   davidramosoler@gmail.com). Usuario autenticado: `dilesz`. CLI 59.16.0.

@@ -7,6 +7,7 @@ import { GameOver } from './scenes/GameOver';
 import { HowTo } from './scenes/HowTo';
 import { Menu } from './scenes/Menu';
 import { Pause } from './scenes/Pause';
+import { Preloader } from './scenes/Preloader';
 import { Settings } from './scenes/Settings';
 import { Victory } from './scenes/Victory';
 
@@ -38,7 +39,7 @@ export function createGame(parent: string): Phaser.Game {
       powerPreference: 'high-performance',
     },
     fps: { target: 60, min: 30 },
-    scene: [Boot, Menu, HowTo, Settings, Game, Pause, GameOver, Victory],
+    scene: [Boot, Preloader, Menu, HowTo, Settings, Game, Pause, GameOver, Victory],
   };
   return new Phaser.Game(config);
 }
