@@ -91,7 +91,8 @@
 - Tests 17/17, typecheck, lint, build OK. Smokes desktop+móvil OK, 0 errores.
 - Bugs visuales corregidos: ridges tapando plataformas (depths -10..-5),
   AJUSTES cortado + solape deco (re-layout menú), spikes flotantes (ya en v1.1).
-- Pendiente: commit + push + deploy + smokes en producción.
+- Commit `93cfc14` (45 ficheros), push OK, deploy prod READY, smokes desktop+móvil
+  en producción OK con 0 errores (capturas revisadas).
 
 ## 2026-09-14 — Login Vercel + deploy + producción (FASES 15-16)
 - `vercel login` por device-code (`RQJN-QXVQ`, luego `PCBF-QMTX` por email
