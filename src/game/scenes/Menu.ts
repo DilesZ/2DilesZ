@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
-import { SceneKeys, TextureKeys } from '../constants';
+import { SceneKeys, TextureKeys, UI_FONT } from '../constants';
 import { SaveService } from '../services/save';
 import { AudioBus } from '../systems/audio';
-import { bgStars, bodyText, menuButton, titleText } from '../ui/menu';
+import { bgStars, bodyText, menuButton, subtitleText, titleText } from '../ui/menu';
 
 export class Menu extends Phaser.Scene {
   constructor() {
@@ -14,34 +14,28 @@ export class Menu extends Phaser.Scene {
     const save = SaveService.load();
     AudioBus.setMuted(save.muted);
 
-    titleText(this, 84, '2DilesZ');
-    this.add
-      .text(480, 132, '— EL FARO PERDIDO —', {
-        fontFamily: '"Courier New", monospace',
-        fontSize: '20px',
-        color: '#9aa3c7',
-      })
-      .setOrigin(0.5);
+    titleText(this, 70, '2DilesZ', 46);
+    subtitleText(this, 116, '— EL FARO PERDIDO —');
     bodyText(
       this,
-      168,
+      148,
       `Reactiva los 6 faros de la montaña.\nSalta, esquiva, derrota enemigos y combina power-ups.\nRécord total: ${save.totalBest} pts · Nivel desbloqueado: ${save.unlocked}/6`,
       14,
     );
 
-    // fila decorativa con los sprites Kenney
+    // fila decorativa: espíritu, sombra, murciélago, moneda y engranaje
     const deco = [
-      TextureKeys.PlayerIdle,
-      TextureKeys.SlimeWalkA,
-      TextureKeys.FlyA,
-      TextureKeys.Coin,
-      TextureKeys.FlagOnA,
+      TextureKeys.Spirit,
+      TextureKeys.ShadeA,
+      TextureKeys.BatA,
+      TextureKeys.CoinOrb,
+      TextureKeys.GearA,
     ];
     deco.forEach((tex, i) => {
-      const img = this.add.image(360 + i * 60, 270, tex).setScale(0.55);
+      const img = this.add.image(360 + i * 60, 254, tex).setScale(0.5);
       this.tweens.add({
         targets: img,
-        y: 262,
+        y: 246,
         duration: 700 + i * 120,
         yoyo: true,
         repeat: -1,
@@ -49,23 +43,23 @@ export class Menu extends Phaser.Scene {
       });
     });
 
-    menuButton(this, 322, '▶  JUGAR', () => {
+    menuButton(this, 304, '▶  JUGAR', () => {
       this.scene.start(SceneKeys.Game, { level: save.unlocked });
-    });
-    menuButton(this, 380, 'NIVELES', () => this.showLevels(save.unlocked));
-    menuButton(this, 438, 'CÓMO JUGAR', () => this.scene.start(SceneKeys.HowTo));
-    menuButton(this, 488, `AJUSTES  (sonido: ${save.muted ? 'OFF' : 'ON'})`, () =>
+    }, { primary: true });
+    menuButton(this, 360, 'NIVELES', () => this.showLevels(save.unlocked));
+    menuButton(this, 416, 'CÓMO JUGAR', () => this.scene.start(SceneKeys.HowTo));
+    menuButton(this, 472, `AJUSTES  (sonido: ${save.muted ? 'OFF' : 'ON'})`, () =>
       this.scene.start(SceneKeys.Settings),
     );
 
     this.add
       .text(
         480,
-        516,
-        'WASD/flechas + ESPACIO · SHIFT dash · P pausa · táctil en móvil · Gráficos: Kenney.nl (CC0)',
+        520,
+        'WASD/flechas + ESPACIO · SHIFT dash · P pausa · táctil en móvil',
         {
-          fontFamily: '"Courier New", monospace',
-          fontSize: '12px',
+          fontFamily: UI_FONT,
+          fontSize: '13px',
           color: '#9aa3c7',
         },
       )

@@ -75,6 +75,24 @@
 - Pista N2: cangrejos → babosas.
 - Pendiente: commit + push + deploy + smokes en producción.
 
+## 2026-09-14 — Dirección de arte v2 "Neon Night" (v2.0.0)
+- Motivo: feedback del usuario ("horrible gráficamente"). Diagnóstico: estilos
+  mezclados (cartoon + pixel + plano), fondos vacíos, UI básica.
+- Decisión: rehacer la capa visual completa con arte 100% procedural cohesionado
+  (luz contra la oscuridad); se eliminan los 25 PNG Kenney del repo.
+- Nuevo `Boot.ts` (~450 líneas de pintores Canvas2D): espíritu (4 poses), sombras,
+  murciélago (2 frames), engranaje (2), orbe-moneda, pinchos neón, farolillos,
+  tile nocturno, tablones, gólem obsidiana, faro, beam, glow, niebla, 3 ridges,
+  2 auroras, viñeta, 7 orbes de power-up. `ui/backdrop.ts` compartido.
+- Gameplay intacto (mecánicas y niveles no cambian): aura, estela, polvo de
+  aterrizaje, parpadeo, tilt; beam del faro + halo; power-ups como orbes.
+- UI: Baloo 2 (CDN + espera máx 900ms en Boot), botones primary/neón, Pause
+  reconstruida con helpers, HowTo/Settings/GameOver/Victory con backdrop.
+- Tests 17/17, typecheck, lint, build OK. Smokes desktop+móvil OK, 0 errores.
+- Bugs visuales corregidos: ridges tapando plataformas (depths -10..-5),
+  AJUSTES cortado + solape deco (re-layout menú), spikes flotantes (ya en v1.1).
+- Pendiente: commit + push + deploy + smokes en producción.
+
 ## 2026-09-14 — Login Vercel + deploy + producción (FASES 15-16)
 - `vercel login` por device-code (`RQJN-QXVQ`, luego `PCBF-QMTX` por email
   davidramosoler@gmail.com). Usuario autenticado: `dilesz`. CLI 59.16.0.

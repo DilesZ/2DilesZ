@@ -2,6 +2,25 @@
 
 Todos los cambios notables de **2DilesZ: El Faro Perdido**.
 
+## [2.0.0] - 2026-09-14
+
+### Dirección de arte "Neon Night" (rehaciendo v1.x por feedback)
+- Eliminados todos los PNG Kenney: ahora el 100% del arte es procedural propio
+  pintado con Canvas2D (degradados, glows, siluetas). Cero assets externos.
+- Protagonista rediseñado: Pip, espíritu de luz con gorra de farero (poses idle,
+  salto, daño, parpadeo), aura aditiva pulsante, inclinación, squash & stretch,
+  estela de luz al correr/dashear y polvo al aterrizar.
+- Enemigos de sombra con ojos neón: babosa gelatinosa, murciélago con aleteo,
+  gólem de obsidiana con grietas y engranajes con dientes animados.
+- Mundo: cielo en gradiente, auroras animadas, luna con halo, estrellas con
+  titileo, 3 cordilleras en parallax, luciérnagas, niebla a la deriva y viñeta.
+- Plataformas de pizarra con musgo neón, puentes de madera, pinchos metálicos
+  con puntas de neón, checkpoints como farolillos de piedra (encendido pulsante),
+  faro redibujado con haz de luz oscilante y halo.
+- UI profesional: tipografía Baloo 2, botones primario/neón con hover glow,
+  títulos con sombra, pantallas con fondo ambiental (menú, cómo jugar, ajustes,
+  pausa, game over, victoria).
+
 ## [1.1.0] - 2026-09-14
 
 ### Añadido

@@ -24,6 +24,8 @@ import { SaveService } from '../services/save';
 import { AudioBus } from '../systems/audio';
 import { burst, flashSprite, floatText } from '../systems/fx';
 import { readActions } from '../systems/input';
+import { UI_FONT } from '../constants';
+import { addVignette, buildBackdrop } from '../ui/backdrop';
 
 interface MovingPlat {
   obj: Phaser.GameObjects.TileSprite;
@@ -67,13 +69,9 @@ export class Game extends Phaser.Scene {
   private hud!: Phaser.GameObjects.Text;
   private hintText!: Phaser.GameObjects.Text;
   private finished = false;
-  private takenFlags: Phaser.GameObjects.Image[] = [];
-  private torches: Phaser.GameObjects.Image[] = [];
   private animMs = 0;
-  private coinParity = -1;
-  private flagParity = -1;
-  private torchParity = -1;
-  private sawParity = -1;
+  private wasGrounded = false;
+  private nextTrailMs = 0;
 
   constructor() {
     super(SceneKeys.Game);
@@ -92,13 +90,9 @@ export class Game extends Phaser.Scene {
     this.finished = false;
     this.iframesUntil = 0;
     this.sawCooldownUntil = 0;
-    this.takenFlags = [];
-    this.torches = [];
     this.animMs = 0;
-    this.coinParity = -1;
-    this.flagParity = -1;
-    this.torchParity = -1;
-    this.sawParity = -1;
+    this.wasGrounded = false;
+    this.nextTrailMs = 0;
     this.respawn = { ...this.level.spawn };
   }
 
@@ -157,26 +151,8 @@ export class Game extends Phaser.Scene {
   private goalZone: Phaser.GameObjects.Zone | null = null;
 
   private buildBackground(): void {
-    this.cameras.main.setBackgroundColor('#0b1020');
-    // cielo + estrellas fijas al mundo (parallax simple: scrollFactor 0.3)
-    const sky = this.add.rectangle(this.level.worldW / 2, 270, this.level.worldW, 540, 0x141c3d);
-    sky.setScrollFactor(0.2);
-    for (let i = 0; i < 160; i++) {
-      const x = Math.random() * this.level.worldW;
-      const y = Math.random() * 380;
-      const star = this.add.rectangle(x, y, Math.random() < 0.2 ? 2 : 1, 1, 0xffffff, 0.3 + Math.random() * 0.5);
-      star.setScrollFactor(0.3);
-    }
-    // luna pixel
-    const moon = this.add.circle(830, 90, 26, 0xe8ecff).setScrollFactor(0.2);
-    this.add.circle(822, 84, 22, 0x141c3d).setScrollFactor(0.2);
-    void moon;
-    // colinas lejanas
-    for (let x = 0; x < this.level.worldW; x += 320) {
-      const h = this.add.triangle(x + 160, 476, 0, 120, 160, 0, 320, 120, 0x1c2450);
-      h.setScrollFactor(0.6);
-      h.setOrigin(0.5, 1);
-    }
+    buildBackdrop(this, { worldW: this.level.worldW, gameplay: true });
+    addVignette(this);
   }
 
   private addStaticPlatform(x: number, y: number, w: number, h: number): void {
@@ -185,14 +161,14 @@ export class Game extends Phaser.Scene {
     r.setVisible(false);
     this.physics.add.existing(r, true);
     this.staticGroup!.add(r);
-    this.add.tileSprite(x + w / 2, y + h / 2, w, h, TextureKeys.Grass).setDepth(1);
+    this.add.tileSprite(x + w / 2, y + h / 2, w, h, TextureKeys.TileNight).setDepth(1);
   }
 
   private buildPlatforms(): void {
     this.staticGroup = this.physics.add.staticGroup();
     this.level.platforms.forEach((p, i) => {
       if (p.moving) {
-        const ts = this.add.tileSprite(p.x + p.w / 2, p.y + p.h / 2, p.w, p.h, TextureKeys.Bridge);
+        const ts = this.add.tileSprite(p.x + p.w / 2, p.y + p.h / 2, p.w, p.h, TextureKeys.PlankNight);
         ts.setDepth(2);
         this.physics.add.existing(ts);
         const body = ts.body as Phaser.Physics.Arcade.Body;
@@ -218,22 +194,40 @@ export class Game extends Phaser.Scene {
   private buildGoalAndCheckpoints(): void {
     this.checkpointGroup = this.physics.add.staticGroup();
     for (const c of this.level.checkpoints) {
-      const img = this.add.image(c.x, c.y + 12, TextureKeys.FlagOff).setOrigin(0.5, 1);
+      const img = this.add.image(c.x, c.y + 12, TextureKeys.BeaconOff).setOrigin(0.5, 1);
       this.physics.add.existing(img, true);
       img.setData('taken', false);
       img.setData('cx', c.x);
       img.setData('cy', c.y - 20);
       this.checkpointGroup.add(img);
     }
+    // halo del faro
+    this.add
+      .image(this.level.goal.x, this.level.goal.y - 20, TextureKeys.Glow)
+      .setTint(0xffd98a)
+      .setScale(3.2)
+      .setAlpha(0.45)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(6);
     const gl = this.add.image(this.level.goal.x, this.level.goal.y, TextureKeys.Goal);
     gl.setDepth(8);
     this.tweens.add({ targets: gl, y: this.level.goal.y - 6, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    // antorchas animadas flanqueando el faro
-    for (const dx of [-46, 46]) {
-      const t = this.add.image(this.level.goal.x + dx, this.level.goal.y + 22, TextureKeys.TorchA);
-      t.setDepth(7);
-      this.torches.push(t);
-    }
+    // haz de luz oscilante
+    const beam = this.add
+      .image(this.level.goal.x - 4, this.level.goal.y - 38, TextureKeys.Beam)
+      .setOrigin(0, 0.5)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setAlpha(0.85)
+      .setDepth(7);
+    this.tweens.add({
+      targets: beam,
+      angle: 14,
+      duration: 2600,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+    beam.setAngle(-14);
     this.goalZone = this.add.zone(this.level.goal.x, this.level.goal.y, 56, 70);
     this.physics.add.existing(this.goalZone);
     const zb = this.goalZone.body as Phaser.Physics.Arcade.Body;
@@ -245,16 +239,14 @@ export class Game extends Phaser.Scene {
     this.coinGroup = this.physics.add.staticGroup();
     this.coinsTotal = this.level.coins.length;
     for (const c of this.level.coins) {
-      const img = this.add.image(c.x, c.y, TextureKeys.Coin);
+      const img = this.add.image(c.x, c.y, TextureKeys.CoinOrb);
       this.physics.add.existing(img, true);
       this.tweens.add({ targets: img, y: c.y - 5, duration: 700 + Math.random() * 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       this.coinGroup.add(img);
     }
     this.powGroup = this.physics.add.staticGroup();
     for (const p of this.level.powerups) {
-      const tex =
-        p.kind === 'heart' ? TextureKeys.HeartK : p.kind === 'star' ? TextureKeys.StarK : `px-pow-${p.kind}`;
-      const img = this.add.image(p.x, p.y, tex);
+      const img = this.add.image(p.x, p.y, `px-pow-${p.kind}`);
       this.physics.add.existing(img, true);
       img.setData('kind', p.kind);
       this.tweens.add({ targets: img, y: p.y - 7, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -271,15 +263,15 @@ export class Game extends Phaser.Scene {
   }
 
   private buildHazards(): void {
-    // pinchos Kenney (base apoyada en la plataforma: def.y + 16)
-    const spikeFrame = this.textures.getFrame(TextureKeys.Spikes);
+    // pinchos de neón (base apoyada en la plataforma: def.y + 16)
+    const spikeFrame = this.textures.getFrame(TextureKeys.SpikeNeon);
     const spikeScale = 18 / spikeFrame.height;
     const spikeW = spikeFrame.width * spikeScale;
     for (const s of this.level.spikes) {
       const count = Math.max(1, Math.round(s.w / spikeW));
       for (let i = 0; i < count; i++) {
         const img = this.add
-          .image(s.x + spikeW / 2 + i * spikeW, s.y + 16, TextureKeys.Spikes)
+          .image(s.x + spikeW / 2 + i * spikeW, s.y + 16, TextureKeys.SpikeNeon)
           .setOrigin(0.5, 1)
           .setScale(spikeScale);
         this.physics.add.existing(img, true);
@@ -287,9 +279,9 @@ export class Game extends Phaser.Scene {
         this.staticGroup!.add(img);
       }
     }
-    // sierras Kenney animadas (intercambio de frames, sin rotación)
+    // engranajes de sombra (intercambio de frames, sin rotación)
     for (const sd of this.level.saws) {
-      const img = this.physics.add.image(sd.x, sd.y, TextureKeys.SawA);
+      const img = this.physics.add.image(sd.x, sd.y, TextureKeys.GearA);
       const body = img.body as Phaser.Physics.Arcade.Body;
       body.setAllowGravity(false);
       body.setImmovable(true);
@@ -317,8 +309,8 @@ export class Game extends Phaser.Scene {
       const img = cp as Phaser.GameObjects.Image;
       if (img.getData('taken')) return;
       img.setData('taken', true);
-      img.setTexture(TextureKeys.FlagOnA);
-      this.takenFlags.push(img);
+      img.setTexture(TextureKeys.BeaconOn);
+      this.tweens.add({ targets: img, scale: 1.12, duration: 350, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       this.respawn = { x: Number(img.getData('cx')), y: Number(img.getData('cy')) };
       AudioBus.checkpoint();
       burst(this, img.x, img.y - 10, 0x35ff70, 10, 120);
@@ -340,8 +332,9 @@ export class Game extends Phaser.Scene {
   private buildHUD(): void {
     this.hud = this.add
       .text(12, 8, '', {
-        fontFamily: '"Courier New", monospace',
-        fontSize: '15px',
+        fontFamily: UI_FONT,
+        fontSize: '16px',
+        fontStyle: '700',
         color: '#ffffff',
         stroke: '#000',
         strokeThickness: 4,
@@ -351,7 +344,7 @@ export class Game extends Phaser.Scene {
       .setDepth(100);
     const pauseBtn = this.add
       .text(948, 8, '❚❚', {
-        fontFamily: '"Courier New", monospace',
+        fontFamily: UI_FONT,
         fontSize: '18px',
         color: '#ffffff',
         backgroundColor: '#1c2450',
@@ -368,8 +361,8 @@ export class Game extends Phaser.Scene {
   private showHint(): void {
     this.hintText = this.add
       .text(480, 500, this.level.hint, {
-        fontFamily: '"Courier New", monospace',
-        fontSize: '14px',
+        fontFamily: UI_FONT,
+        fontSize: '15px',
         color: '#ffd23f',
         stroke: '#000',
         strokeThickness: 4,
@@ -550,6 +543,28 @@ export class Game extends Phaser.Scene {
 
     this.player.update(delta, actions, this.powers, now);
 
+    // polvo al aterrizar
+    const pbody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
+    const groundedNow = pbody.blocked.down || pbody.touching.down;
+    if (groundedNow && !this.wasGrounded) {
+      burst(this, this.player.x, this.player.y + 22, 0x9aa3c7, 8, 90);
+    }
+    this.wasGrounded = groundedNow;
+
+    // estela de luz a velocidad o dash
+    const fast = Math.abs(pbody.velocity.x) > 200 || this.player.isDashing(now);
+    if (fast && now >= this.nextTrailMs) {
+      this.nextTrailMs = now + 70;
+      const tr = this.add
+        .image(this.player.x, this.player.y, TextureKeys.Glow)
+        .setTint(0xffd98a)
+        .setScale(0.5)
+        .setAlpha(0.5)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(8);
+      this.tweens.add({ targets: tr, alpha: 0, scale: 0.15, duration: 380, onComplete: () => tr.destroy() });
+    }
+
     // plataformas móviles (sine)
     for (const m of this.movers) {
       m.t += delta;
@@ -563,36 +578,25 @@ export class Game extends Phaser.Scene {
       }
     }
 
-    // sierras (patrulla + dientes animados)
-    const sawFrame = Math.floor(this.animMs / 130) % 2 === 0 ? TextureKeys.SawA : TextureKeys.SawB;
+    // engranajes (patrulla + dientes animados)
+    this.animMs += delta;
+    const gearFrame = Math.floor(this.animMs / 140) % 2 === 0 ? TextureKeys.GearA : TextureKeys.GearB;
     for (const s of this.saws) {
       s.t += delta;
       const phase = (s.t * s.speed) / 1000;
       if (s.axis === 'x') s.img.setPosition(s.baseX + Math.sin(phase / 60) * s.range, s.baseY);
       else s.img.setPosition(s.baseX, s.baseY + Math.sin(phase / 60) * s.range);
-      if (s.img.texture.key !== sawFrame) s.img.setTexture(sawFrame);
+      if (s.img.texture.key !== gearFrame) s.img.setTexture(gearFrame);
       const body = s.img.body as Phaser.Physics.Arcade.Body;
       body.updateFromGameObject();
     }
 
-    // animaciones ambientales Kenney (moneda, banderas, antorchas)
-    this.animMs += delta;
-    const coinFrame = Math.floor(this.animMs / 150) % 2 === 0 ? TextureKeys.Coin : TextureKeys.CoinSide;
-    if (coinFrame && this.coinParity !== Math.floor(this.animMs / 150) % 2) {
-      this.coinParity = Math.floor(this.animMs / 150) % 2;
-      for (const c of (this.coinGroup?.getChildren() ?? []) as Phaser.GameObjects.Image[]) {
-        if (c.active) c.setTexture(coinFrame);
+    // moneda: pulso luminoso
+    const coinScale = 1 + Math.sin(this.animMs / 280) * 0.12;
+    if (this.coinGroup) {
+      for (const c of this.coinGroup.getChildren() as Phaser.GameObjects.Image[]) {
+        if (c.active) c.setScale(coinScale);
       }
-    }
-    const flagFrame = Math.floor(this.animMs / 300) % 2 === 0 ? TextureKeys.FlagOnA : TextureKeys.FlagOnB;
-    if (this.flagParity !== Math.floor(this.animMs / 300) % 2) {
-      this.flagParity = Math.floor(this.animMs / 300) % 2;
-      for (const f of this.takenFlags) f.setTexture(flagFrame);
-    }
-    const torchFrame = Math.floor(this.animMs / 220) % 2 === 0 ? TextureKeys.TorchA : TextureKeys.TorchB;
-    if (this.torchParity !== Math.floor(this.animMs / 220) % 2) {
-      this.torchParity = Math.floor(this.animMs / 220) % 2;
-      for (const t of this.torches) t.setTexture(torchFrame);
     }
 
     // enemigos

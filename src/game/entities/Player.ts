@@ -6,11 +6,12 @@ import { AudioBus } from '../systems/audio';
 import type { Actions } from '../systems/input';
 
 /**
- * Control del jugador: coyote-time, jump-buffer, salto variable, doble salto y dash.
- * Visual: sprite Kenney con poses (idle / walk A-B / jump / hit).
+ * Pip, espíritu de luz: coyote-time, jump-buffer, salto variable, doble salto y dash.
+ * Aura aditiva, parpadeo, inclinación por velocidad y estela al dashear.
  */
 export class Player {
   sprite: Phaser.Physics.Arcade.Sprite;
+  private aura: Phaser.GameObjects.Image;
   private coyoteUntil = 0;
   private bufferUntil = 0;
   private airJumps = 0;
@@ -19,24 +20,34 @@ export class Player {
   private dashCooldownUntil = 0;
   private dashDir = 1;
   private hurtUntil = 0;
-  private walkMs = 0;
+  private blinkUntil = 0;
+  private nextBlink = 0;
   facing = 1;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    this.sprite = scene.physics.add.sprite(x, y, TextureKeys.PlayerIdle);
+    this.sprite = scene.physics.add.sprite(x, y, TextureKeys.Spirit);
     this.sprite.setCollideWorldBounds(false);
     this.sprite.setDragX(TUNING.player.dragX);
     this.sprite.setMaxVelocity(TUNING.player.moveSpeed * 1.6, TUNING.player.maxFall);
     this.sprite.setDepth(10);
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    body.setSize(this.sprite.width * 0.48, this.sprite.height * 0.8);
+    body.setSize(this.sprite.width * 0.52, this.sprite.height * 0.78);
+    this.aura = scene.add
+      .image(x, y, TextureKeys.Glow)
+      .setTint(0xffd98a)
+      .setAlpha(0.55)
+      .setScale(0.85)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(9);
+    this.nextBlink = 1500 + Math.random() * 2000;
   }
 
   reset(x: number, y: number): void {
     this.sprite.setPosition(x, y);
     this.sprite.setVelocity(0, 0);
     this.sprite.setAlpha(1);
-    this.sprite.setTexture(TextureKeys.PlayerIdle);
+    this.sprite.setTexture(TextureKeys.Spirit);
+    this.sprite.setAngle(0);
     this.airJumps = 0;
     this.dashUntil = 0;
     this.dashCooldownUntil = 0;
@@ -46,7 +57,14 @@ export class Player {
 
   hurt(now: number): void {
     this.hurtUntil = now + 320;
-    this.sprite.setTexture(TextureKeys.PlayerHit);
+  }
+
+  destroyAura(): void {
+    try {
+      this.aura.destroy();
+    } catch {
+      /* noop */
+    }
   }
 
   get x(): number {
@@ -86,7 +104,9 @@ export class Player {
     }
     if (this.isDashing(now)) {
       this.sprite.setFlipX(this.dashDir < 0);
-      this.sprite.setTexture(TextureKeys.PlayerJump);
+      this.sprite.setTexture(TextureKeys.SpiritJump);
+      this.sprite.setAngle(this.dashDir * -12);
+      this.syncAura(now, 1.5, 0.8);
       return;
     }
     if (!body.allowGravity) body.setAllowGravity(true);
@@ -125,18 +145,33 @@ export class Player {
     }
     if (grounded) this.cutArmed = false;
 
-    // --- pose visual ---
-    if (now < this.hurtUntil) {
-      this.sprite.setTexture(TextureKeys.PlayerHit);
-    } else if (!grounded) {
-      this.sprite.setTexture(TextureKeys.PlayerJump);
-    } else if (Math.abs(nvx) > 30) {
-      this.walkMs += dtMs;
-      this.sprite.setTexture(
-        Math.floor(this.walkMs / 130) % 2 === 0 ? TextureKeys.PlayerWalkA : TextureKeys.PlayerWalkB,
-      );
-    } else {
-      this.sprite.setTexture(TextureKeys.PlayerIdle);
+    // --- pose visual: inclinación + squash + parpadeo ---
+    const vy = body.velocity.y;
+    this.sprite.setAngle(Phaser.Math.Clamp(nvx / 28, -10, 10));
+    const squash = grounded && Math.abs(nvx) > 40 ? 1 + Math.sin(now / 90) * 0.035 : 1;
+    this.sprite.setScale(squash, 1 / Math.sqrt(squash));
+    if (now >= this.nextBlink) {
+      this.blinkUntil = now + 130;
+      this.nextBlink = now + 2200 + Math.random() * 2600;
     }
+    if (now < this.hurtUntil) {
+      this.sprite.setTexture(TextureKeys.SpiritHurt);
+    } else if (!grounded) {
+      this.sprite.setTexture(TextureKeys.SpiritJump);
+    } else if (now < this.blinkUntil) {
+      this.sprite.setTexture(TextureKeys.SpiritBlink);
+    } else {
+      this.sprite.setTexture(TextureKeys.Spirit);
+    }
+    void vy;
+
+    const starOn = now < powers.starUntil;
+    this.syncAura(now, starOn ? 1.25 : 0.85, starOn ? 0.75 : 0.55);
+  }
+
+  private syncAura(now: number, scale: number, alpha: number): void {
+    this.aura.setPosition(this.sprite.x, this.sprite.y);
+    this.aura.setScale(scale * (1 + Math.sin(now / 240) * 0.06));
+    this.aura.setAlpha(alpha);
   }
 }

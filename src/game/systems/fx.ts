@@ -1,6 +1,6 @@
-import { TextureKeys } from '../constants';
+import { TextureKeys, UI_FONT } from '../constants';
 
-/** Pequeños helpers de game-feel: partículas con pooling implícito (Phaser los recicla), flashes y shakes. */
+/** Game-feel: destellos aditivos suaves, textos flotantes y flashes. */
 export function burst(
   scene: Phaser.Scene,
   x: number,
@@ -10,12 +10,13 @@ export function burst(
   speed = 160,
 ): void {
   try {
-    const parts = scene.add.particles(x, y, TextureKeys.Dot, {
+    const parts = scene.add.particles(x, y, TextureKeys.SoftDot, {
       speed: { min: speed * 0.4, max: speed },
       lifespan: { min: 220, max: 480 },
       quantity: count,
-      scale: { min: 1.5, max: 3 },
+      scale: { min: 0.22, max: 0.55 },
       tint: color,
+      blendMode: 'ADD',
       emitting: false,
     });
     parts.explode(count, x, y);
@@ -29,11 +30,12 @@ export function floatText(scene: Phaser.Scene, x: number, y: number, msg: string
   try {
     const t = scene.add
       .text(x, y, msg, {
-        fontFamily: '"Courier New", monospace',
-        fontSize: '14px',
+        fontFamily: UI_FONT,
+        fontSize: '15px',
+        fontStyle: '800',
         color,
         stroke: '#000',
-        strokeThickness: 3,
+        strokeThickness: 4,
       })
       .setOrigin(0.5);
     scene.tweens.add({

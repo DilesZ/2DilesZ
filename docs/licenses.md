@@ -1,38 +1,18 @@
-# Licencias de assets externos
+# Licencias de assets
 
-Todos los assets gráficos externos de este proyecto pertenecen a **Kenney**
-(https://www.kenney.nl/assets/new-platformer-pack — pack "New Platformer Pack")
-y están publicados bajo **Creative Commons CC0 1.0 Universal (dominio público)**.
+**Este proyecto no contiene ningún asset externo.** Todo el arte y el audio
+se generan por código en tiempo de ejecución:
 
-- Puedes copiar, modificar y usar los assets incluso con fines comerciales
-  sin pedir permiso y sin atribución (la atribución es voluntaria y se incluye
-  por cortesía en el menú del juego y en el README).
-- Texto legal: https://creativecommons.org/publicdomain/zero/1.0/
-
-## Archivos incluidos (public/assets/kenney/)
-
-| Fichero local | Origen | Uso en el juego |
-|---|---|---|
-| Characters_character_yellow_{idle,jump,walk_a,walk_b,hit}.png | New Platformer Pack / Sprites / Characters | Jugador (animado) |
-| Enemies_slime_normal_{rest,walk_a,walk_b}.png | New Platformer Pack / Sprites / Enemies | Enemigo walker (animado) |
-| Enemies_fly_{rest,a,b}.png | New Platformer Pack / Sprites / Enemies | Enemigo flyer (animado) |
-| Enemies_saw_{a,b}.png | New Platformer Pack / Sprites / Enemies | Sierras (animadas) |
-| Tiles_coin_gold{,_side}.png | New Platformer Pack / Sprites / Tiles | Fragmentos de luz (giro) |
-| Tiles_spikes.png | New Platformer Pack / Sprites / Tiles | Pinchos |
-| Tiles_flag_{off,green_a,green_b}.png | New Platformer Pack / Sprites / Tiles | Checkpoints |
-| Tiles_torch_on_{a,b}.png | New Platformer Pack / Sprites / Tiles | Antorchas del faro |
-| Tiles_terrain_grass_block_top.png | New Platformer Pack / Sprites / Tiles | Plataformas |
-| Tiles_bridge_logs.png | New Platformer Pack / Sprites / Tiles | Plataformas móviles |
-| Tiles_heart.png | New Platformer Pack / Sprites / Tiles | Power-up corazón |
-| Tiles_star.png | New Platformer Pack / Sprites / Tiles | Power-up estrella |
-
-Obtenidos el 2026-09-14 vía mirror https://github.com/shorepine/kenney
-(copia declarada de los assets CC0 de kenney.nl) porque kenney.nl no era
-accesible desde la red de desarrollo. Los ficheros son los PNG originales
-de Kenney, solo renombrados con prefijo de carpeta.
-
-## Assets propios (sin licencia externa)
-
-- Faro/checkpoint original, iconos de power-ups (botas, pluma, escudo, imán, dash),
-  gólem, partículas: generados por código en `src/game/scenes/Boot.ts`.
+- Sprites, tiles, fondos, iconos, faro, enemigos, partículas: pintados con
+  Canvas2D en `src/game/scenes/Boot.ts` (dirección de arte "Neon Night" v2).
 - Audio: 100% procedural con WebAudio (`src/game/systems/audio.ts`).
+- Tipografía UI: Baloo 2 (Google Fonts, licencia SIL Open Font License 1.1),
+  cargada por CDN con fallbacks del sistema si no hay conexión.
+
+## Historial
+
+- v1.1.0 incluía 25 PNG del pack "New Platformer Pack" de Kenney (CC0),
+  obtenidos vía mirror. En v2.0 se eliminaron por completo del repositorio
+  al rehacer la dirección de arte con gráficos propios (el usuario prefirió
+  un estilo original cohesionado). No queda ningún fichero de Kenney en
+  `public/`, `src/` ni `dist/`.
