@@ -44,3 +44,16 @@
      `maxTouchPoints > 0` o puntero grueso.
 - Re-smoke tras el fix: OK (2 monedas, 0 errores).
 - Pendiente: push a GitHub, deploy Vercel, prueba de producción.
+
+## 2026-09-14 — Checkpoints GitHub (FASES 15-16)
+- `3f9c508` feat: initialize 2DilesZ El Faro Perdido (48 ficheros, 6195 líneas). Push OK a `main`.
+- `47d5971` chore: normalize line endings with .gitattributes. Push OK.
+- Verificado en GitHub web: repo ya muestra README, src, tests, docs, vercel.json.
+- CI GitHub Actions: runs #1 (34s) y #2 lanzados en los pushes. En local el pipeline
+  equivalente (typecheck+lint+test+build) está en verde.
+- `.gitignore` verificado: node_modules, dist, .vercel, coverage, smoke-*.png y .env excluidos.
+  Sin secretos en el diff (solo código + lockfile + docs).
+- Vercel CLI 59.16.0 instalado globalmente. `vercel whoami` → logged out.
+- BLOQUEO: el deploy CLI requiere `vercel login` (OAuth manual del propietario) o que el
+  proyecto Vercel conectado haga auto-deploy del push. Pendiente URL del proyecto Vercel
+  para verificar producción.
