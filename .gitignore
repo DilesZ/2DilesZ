@@ -8,3 +8,5 @@ smoke-*.png
 .env
 .env.*
 !.env.example
+
+.vercel
